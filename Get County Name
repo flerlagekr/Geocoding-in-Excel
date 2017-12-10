@@ -1,0 +1,38 @@
+'Get County Name Based on Latitude and Longitude
+Function GetCounty(Latitude As String, Longitude As String) As String
+    Dim strQuery As String, strTemp As String
+   
+    'Assemble the query string
+    strQuery = "http://data.fcc.gov/api/block/find?"
+    strQuery = strQuery & "latitude=" & Latitude
+    strQuery = strQuery & "&longitude=" & Longitude
+    strQuery = strQuery & "&showall=true"
+   
+    'define XML and HTTP components
+    Dim Result As New MSXML2.DOMDocument
+    Dim Service As New MSXML2.XMLHTTP
+   
+    'create HTTP request to query URL - make sure to have
+    'that last "False" there for synchronous operation
+    Service.Open "GET", strQuery, False
+    Service.send
+    Result.LoadXML (Service.responseText)
+   
+    'parse the response text to get the county name.
+    Dim intPos As Integer, intPos2 As Integer, strError As String
+    intPos = InStr(1, Service.responseText, "<County FIPS=")
+    If intPos > 0 Then
+        strTemp = Service.responseText
+        strTemp = Mid(strTemp, intPos + 13, Len(strTemp) - (intPos + 13))
+        intPos = InStr(1, strTemp, "/>")
+        strTemp = Left(strTemp, intPos - 1)
+        intPos = InStr(1, strTemp, " name=")
+        strTemp = Mid(strTemp, intPos + 7, Len(strTemp) - (intPos + 7))
+        GetCounty = strTemp
+    Else
+        GetCounty = "UNKNOWN ERROR OCCURRED"
+    End If
+   
+    Set Service = Nothing
+    Set Result = Nothing
+End Function
